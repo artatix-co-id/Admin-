@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Kirim E-Tiket | Artatix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#1a53d1;--brand-dark:#12409f;--ink:#17181a;--muted:#7c828b;--gray:#f4f5f7;--line:#ececef;--red:#e0304e;--green:#178a43}
+*{box-sizing:border-box}
+body{font-family:Poppins,ui-sans-serif,system-ui,sans-serif;background:#f5f6f8;color:var(--ink);margin:0;padding:40px 16px;font-size:14px;line-height:1.5}
+.box{max-width:520px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 22px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+h1{font-size:19px;font-weight:800;letter-spacing:-.3px;margin:0 0 4px}
+.sub{font-size:11.5px;font-weight:800;letter-spacing:2.2px;color:var(--brand);margin:0 0 18px}
+label{display:block;font-weight:700;font-size:12.5px;margin:14px 0 6px;color:#3a3e44}
+input,select,textarea{width:100%;padding:12px 14px;border:1.5px solid #e2e4e8;border-radius:12px;font:inherit;font-size:13.5px;box-sizing:border-box;outline:0;transition:border-color .2s,box-shadow .2s;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,83,209,.12)}
+input[readonly]{background:var(--gray);color:#5b616b}
+textarea{height:110px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{width:100%;margin-top:20px;padding:15px;border:0;border-radius:13px;background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;font-weight:800;font-size:15px;letter-spacing:.3px;cursor:pointer;transition:.2s;box-shadow:0 6px 16px rgba(26,83,209,.28);font-family:inherit}
+button:hover{transform:translateY(-1px);box-shadow:0 9px 20px rgba(26,83,209,.34)}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+#log{margin-top:14px;font-size:13px;font-weight:700;text-align:center;min-height:20px}
+.auto{display:inline-block;font-size:9.5px;font-weight:800;color:var(--muted);background:var(--gray);border:1px solid var(--line);border-radius:6px;padding:2px 7px;margin-left:6px;letter-spacing:.5px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>🎟️ Kirim E-Tiket</h1>
+  <p class="sub" id="sub">ARTATIX &bull; ADMIN</p>
+
+  <label for="email">Email Peserta <span class="auto">WAJIB</span></label>
+  <input id="email" type="email" placeholder="peserta@email.com" autocomplete="email">
+
+  <label for="nama">Nama Lengkap</label>
+  <input id="nama" type="text" placeholder="Nama sesuai pemesanan">
+
+  <div class="row2">
+    <div>
+      <label for="order">Order ID <span class="auto">AUTO</span></label>
+      <input id="order" type="text" readonly>
+    </div>
+    <div>
+      <label for="kode">Kode Tiket <span class="auto">AUTO</span></label>
+      <input id="kode" type="text" readonly>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div>
+      <label for="kategori">Kategori Tiket</label>
+      <select id="kategori">
+        <option value="PRESALE KE-2 TIKET FESTIVAL" data-price="150000" data-total="1">PRESALE KE-2 TIKET FESTIVAL — Rp150.000</option>
+        <option value="PRESALE KE-2 TIKET FESTIVAL (BUNDLING 4 TIKET)" data-price="520000" data-total="4">PRESALE KE-2 (BUNDLING 4 TIKET) — Rp520.000</option>
+      </select>
+    </div>
+    <div>
+      <label for="total">Total Tagihan</label>
+      <input id="total" type="text" readonly>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div>
+      <label for="tixIdx">Tiket Ke-</label>
+      <input id="tixIdx" type="number" min="1" value="1">
+    </div>
+    <div>
+      <label for="tixTotal">Dari Total <span class="auto">AUTO</span></label>
+      <input id="tixTotal" type="number" min="1" value="1">
+    </div>
+  </div>
+
+  <label for="trans">Nomor Transaksi <span class="auto">AUTO</span></label>
+  <input id="trans" type="text" readonly>
+
+  <label for="detail">Catatan / Data Peserta (opsional)</label>
+  <textarea id="detail" placeholder="Keterangan tambahan jika ada…"></textarea>
+
+  <button id="send" type="button">KIRIM E-TIKET</button>
+  <div id="log" role="status" aria-live="polite"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ================== KONFIGURASI ================== */
+const EMAILJS_SERVICE_ID ="service_51gy8pb";        // EmailJS > Email Services
+const EMAILJS_TEMPLATE_ID="template_wh38lei";       // EmailJS > Email Templates
+const EMAILJS_PUBLIC_KEY ="BA2Va7vgClFSvjmcq";      // Account > API Keys
+
+const EVENT_TITLE ="GLORIFEST “FESTARIA 2026”";
+const EVENT_LOKASI="SMA GLOBAL MANDIRI CIBUBUR";
+const EVENT_TANGGAL="10 Oktober 2026";
+const EVENT_WAKTU ="15:00 - 23:00";
+/* ================================================= */
+
+if(typeof emailjs!=="undefined"){emailjs.init({publicKey:EMAILJS_PUBLIC_KEY});}
+
+const $=id=>document.getElementById(id);
+const g=id=>$(id).value.trim();
+const rupiah=n=>"Rp"+n.toLocaleString("id-ID");
+const randStr=n=>{let s="";const c="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s;};
+
+/* Judul halaman & sub mengikuti konfigurasi event */
+document.title="Admin - Kirim E-Tiket "+EVENT_TITLE+" | Artatix";
+ $("sub").textContent=EVENT_TITLE.toUpperCase()+" \u2022 ADMIN";
+
+/* Auto-generate kode saat halaman dibuka */
+function regenerate(){
+  $("order").value="ARTX-"+Math.floor(10000+Math.random()*90000)+"-"+randStr(4);
+  $("kode").value=String(Math.floor(100000000000+Math.random()*900000000000)); /* 12 digit */
+  $("trans").value="INV-"+randStr(8)+"-"+Date.now();
+}
+regenerate();
+
+/* Sinkron harga + jumlah tiket dari kategori terpilih */
+const kategoriEl=$("kategori"),totalEl=$("total");
+function syncTotal(){
+  const opt=kategoriEl.selectedOptions[0];
+  totalEl.value=rupiah(parseInt(opt.dataset.price,10));
+  $("tixTotal").value=opt.dataset.total||1;
+  $("tixIdx").value=1;
+}
+kategoriEl.addEventListener("change",syncTotal);
+syncTotal();
+
+function formatTanggal(iso){
+  if(!iso)return "-";
+  const d=new Date(iso);
+  return isNaN(d)?iso:d.toLocaleDateString("id-ID",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
+}
+
+const logEl=$("log"),btn=$("send");
+
+btn.addEventListener("click",async()=>{
+  const email=g("email");
+  if(!email||!g("order")){
+    logEl.textContent="⚠ Email & Order ID wajib diisi";
+    logEl.style.color="var(--red)";
+    return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    logEl.textContent="⚠ Format email tidak valid";
+    logEl.style.color="var(--red)";
+    return;
+  }
+
+  btn.disabled=true;
+  logEl.textContent="Mengirim…";
+  logEl.style.color="var(--muted)";
+
+  const nama=g("nama")||"Peserta";
+  const total=totalEl.value;
+  const order=g("order"),kode=g("kode"),trans=g("trans");
+  const tixIdx=Math.max(1,parseInt($("tixIdx").value,10)||1);
+  const tixTotal=Math.max(1,parseInt($("tixTotal").value,10)||1);
+
+  /* QR code otomatis berisi data tiket — dipakai template via {{qr_url}} */
+  const qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=340x340&margin=8&data="
+    +encodeURIComponent("ARTATIX|"+order+"|"+kode);
+
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{
+      email:email,
+      to_email:email,
+      to_name:nama,
+      nama:nama,
+
+      /* — variabel e-tiket Artatix — */
+      event_title:EVENT_TITLE,
+      lokasi:EVENT_LOKASI,
+      tanggal:EVENT_TANGGAL,
+      waktu:EVENT_WAKTU,
+      order_id:order,
+      kode_tiket:kode,
+      kategori:kategoriEl.value,
+      total:total,
+      ticket_index:tixIdx,
+      ticket_total:tixTotal,
+      qr_url:qrUrl,
+      catatan:g("detail")||"-",
+
+      /* — alias kompatibel template lama — */
+      nomor_registrasi:order,
+      nomor_transaksi:trans,
+
+      tanggal_daftar:new Date().toLocaleString("id-ID",{dateStyle:"long",timeStyle:"short"}),
+      subject:"E-Tiket "+EVENT_TITLE+" — "+order,
+      message:
+        "E-Tiket Terkonfirmasi\n\nHalo "+nama+",\nE-Tiket Anda telah diterbitkan.\n\n"+
+        "Detail Tiket:\n"+
+        "Event: "+EVENT_TITLE+"\n"+
+        "Tanggal: "+EVENT_TANGGAL+"\n"+
+        "Waktu: "+EVENT_WAKTU+"\n"+
+        "Lokasi: "+EVENT_LOKASI+"\n"+
+        "Kategori: "+kategoriEl.value+"\n"+
+        "Order ID: "+order+"\n"+
+        "Kode Tiket: "+kode+"\n"+
+        "Ticket "+tixIdx+" dari "+tixTotal+"\n"+
+        "No. Transaksi: "+trans+"\n"+
+        "Total: "+total+"\n\n"+
+        "Tunjukkan QR / kode tiket beserta identitas asli di gerbang masuk.\n\n"+
+        "Sampai jumpa di venue!\n\nSalam,\nArtatix"
+    });
+    logEl.textContent="✓ E-Tiket terkirim ke "+email;
+    logEl.style.color="var(--green)";
+  }catch(e){
+    console.error(e);
+    logEl.textContent="✗ Gagal: "+(e.text||e.message||"coba lagi");
+    logEl.style.color="var(--red)";
+  }
+  btn.disabled=false;
+});
+})();
+</script>
+</body>
+</html>
